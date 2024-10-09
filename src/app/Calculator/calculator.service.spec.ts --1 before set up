@@ -1,0 +1,51 @@
+
+import { TestBed } from '@angular/core/testing';
+import { LogService } from '../Log/log.service';
+import { CalculatorService } from './calculator.service';
+
+describe('calculator Service test',()=>{
+
+  let calculatorService :any
+  // let loggerService :any
+  let mockLoggerService :any
+  //alternate for mock logger service via test bed injection and jasmine
+  let loggerServiceSpy : jasmine.SpyObj<LogService> 
+  beforeEach(()=>{
+    // loggerService = new LogService();
+    // spyOn(loggerService,'logMessage') 
+     //-- logMessage is not called 
+    //but the constructor is called  due to the instantiation
+    // calculatorService = new CalculatorService(loggerService);
+    mockLoggerService = jasmine.createSpyObj('LogService',['logMessage']) 
+    // the logMessage is not called 
+    // and the loggerService -- constructor is also not called 
+    // calculatorService = new CalculatorService(mockLoggerService);
+
+    // implementing the Test Bed concept 
+    TestBed.configureTestingModule({
+      providers:[CalculatorService,{
+        provide:LogService,
+        useValue:mockLoggerService
+      }]
+    })
+    calculatorService = TestBed.inject(CalculatorService)
+    loggerServiceSpy = TestBed.inject(LogService) as jasmine.SpyObj<LogService> 
+    // alternate of mock logger service
+  })
+
+  it('should add 2 nos',()=>{
+    let add = calculatorService.addNumbers(2,2);
+    expect(add).toBe(4);
+    // expect(loggerService.logMessage).toHaveBeenCalledTimes(1);
+    // expect(mockLoggerService.logMessage).toHaveBeenCalledTimes(1)
+    expect(loggerServiceSpy.logMessage).toHaveBeenCalledTimes(1)
+  })
+
+  it('should sub 2 nos',()=>{
+    let sub = calculatorService.substractNumbers(4,2);
+    expect(sub).toBe(2);
+    // expect(loggerService.logMessage).toHaveBeenCalledTimes(1);
+    // expect(mockLoggerService.logMessage).toHaveBeenCalledTimes(1)
+    expect(loggerServiceSpy.logMessage).toHaveBeenCalledTimes(1)
+  })
+})

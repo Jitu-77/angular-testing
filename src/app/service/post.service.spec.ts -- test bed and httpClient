@@ -1,0 +1,54 @@
+import { HttpClient } from "@angular/common/http";
+import { PostService } from "./post.service"
+import { of } from "rxjs";
+import { TestBed } from "@angular/core/testing";
+
+describe('Post Service',()=>{
+    let postService:PostService;
+    let httpClientSpyObj: jasmine.SpyObj<HttpClient>; // due to the dependency in post service
+    let httpClientSpy: jasmine.SpyObj<HttpClient>; // due to the dependency in post service
+    let POSTS = [
+        {
+          id: 1,
+          body: 'body 1',
+          title: 'title 1',
+        },
+        {
+          id: 2,
+          body: 'body 2',
+          title: 'title 2',
+        },
+        {
+          id: 3,
+          body: 'body 3',
+          title: 'title 3',
+        },
+      ];
+    beforeEach(()=>{
+        httpClientSpyObj = jasmine.createSpyObj('HttpClient', ['get']);
+        TestBed.configureTestingModule({
+            providers:[PostService,{
+                provide :HttpClient,
+                useValue:httpClientSpyObj
+            }]
+        })
+        
+        postService = TestBed.inject(PostService)
+        httpClientSpy = TestBed.inject(HttpClient) as jasmine.SpyObj<HttpClient>
+    })
+    describe('getPosts()',()=>{
+        it('should return expected posts when get posts is called',(done:DoneFn)=>{
+            httpClientSpy.get.and.returnValues(of(POSTS))
+            postService.getPosts().subscribe({
+                next:(post)=>{
+                    expect(post).toEqual(POSTS)
+                    done()  //makes this ASYNC TESTING
+                },
+                error : (err)=>{
+                    done.fail
+                }
+            })
+            expect(httpClientSpy.get).toHaveBeenCalledTimes(1)
+        })
+    })
+})

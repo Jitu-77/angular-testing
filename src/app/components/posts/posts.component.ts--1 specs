@@ -1,0 +1,90 @@
+
+import { of } from 'rxjs';
+import { Post } from '../../Models/post';
+import { PostService } from '../../service/post.service';
+import { PostsComponent } from './posts.component';
+import { TestBed } from '@angular/core/testing';
+
+
+//Another way of mocking Post Service 
+class mockServiceClass {
+  getPosts(){
+
+  }
+  deletePosts(post: Post){
+    return of(true)
+  }
+}
+
+describe('PostsComponent', () => {
+  // we need to create a mock post service as there is dependency and we need to test in isolation
+  let POSTS: Post[];
+  let Component : PostsComponent
+  let mockPostService :any
+  let classBasedPostService:any
+  beforeEach(()=>{
+    POSTS = [
+      {
+        id: 1,
+        body: 'body 1',
+        title: 'title 1',
+      },
+      {
+        id: 2,
+        body: 'body 2',
+        title: 'title 2',
+      },
+      {
+        id: 3,
+        body: 'body 3',
+        title: 'title 3',
+      },
+    ];
+    // mockPostService = jasmine.createSpyObj(PostService,['getPosts','deletePosts'])
+    // commented while using class based mocking 
+    
+    //now using test bed module 
+    //this will handle all the dependencies required
+    TestBed.configureTestingModule({
+      providers:[
+        PostsComponent, // in this way we are just testing this component as a service/class
+        // and we are testing the
+        {
+          provide:PostService,
+          // useValue:mockPostService
+          //here we are mocking post service as post service also depends on HTTP CLIENT
+          useClass:mockServiceClass
+          //when use the class
+        }
+      ]
+    })
+
+    // Component = new PostsComponent(mockPostService)
+    //if we are using test bed module  we need to inject the component
+    Component = TestBed.inject(PostsComponent)
+    classBasedPostService = TestBed.inject(PostService)
+  })
+  describe('delete POST', () => {
+    beforeEach(() => {
+      // mockPostService.deletePosts.and.returnValue(of(true));
+      //commented while using class based mocking
+      Component.posts = POSTS;
+      Component.delete(POSTS[1])
+    });
+    it('should delete the selected Post from the posts', () => {
+      expect(Component.posts.length).toBe(2);
+    });
+    it('should call the deletePosts in post Service', () => {
+      // expect(mockPostService.deletePosts).toHaveBeenCalledTimes(1)
+      //commented for class based 
+      spyOn(classBasedPostService,'deletePosts').and.returnValue(of(true))
+      Component.delete(POSTS[1])
+      expect(classBasedPostService.deletePosts).toHaveBeenCalledTimes(1)
+    });
+    it('should call the delete the actual Post', () => {
+        for(let post of Component.posts){
+          expect(post).not.toEqual(POSTS[1])
+        }
+    });
+  })
+});
